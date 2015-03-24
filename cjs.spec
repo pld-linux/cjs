@@ -15,19 +15,18 @@ License:	MIT and (MPLv1.1 or GPLv2+ or LGPLv2+)
 Source0:	https://github.com/linuxmint/cjs/archive/%{version}/%{name}-%{version}.tar.gz
 # Source0-md5:	846940e9cf97b15a5b3940cf5c7b2591
 URL:		http://cinnamon.linuxmint.com/
+BuildRequires:	autoconf >= 2.53
+BuildRequires:	automake >= 1.7.2
 BuildRequires:	cairo-gobject-devel
-BuildRequires:	dbus-glib-devel
+BuildRequires:	gnome-common
 BuildRequires:	gobject-introspection-devel >= 1.38.0
 BuildRequires:	gtk+3-devel
 BuildRequires:	intltool
+BuildRequires:	libtool
 BuildRequires:	mozjs24-devel
+BuildRequires:	pkgconfig >= 0.14.0
 BuildRequires:	readline-devel
 BuildRequires:	sed >= 4.0
-# Require for checks
-BuildRequires:	dbus-x11
-# Bootstrap requirements
-BuildRequires:	gnome-common
-BuildRequires:	gtk-doc
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
