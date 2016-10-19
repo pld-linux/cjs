@@ -5,7 +5,7 @@
 Summary:	Javascript Bindings for Cinnamon
 Name:		cjs
 Version:	2.4.1
-Release:	2
+Release:	3
 Group:		Libraries
 # The following files contain code from Mozilla which
 # is triple licensed under MPL1.1/LGPLv2+/GPLv2+:
