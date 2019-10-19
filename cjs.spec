@@ -4,8 +4,8 @@
 
 Summary:	Javascript Bindings for Cinnamon
 Name:		cjs
-Version:	2.4.1
-Release:	3
+Version:	4.2.0
+Release:	1
 Group:		Libraries
 # The following files contain code from Mozilla which
 # is triple licensed under MPL1.1/LGPLv2+/GPLv2+:
@@ -13,7 +13,7 @@ Group:		Libraries
 # Stack printer (gjs/stack.c)
 License:	MIT and (MPLv1.1 or GPLv2+ or LGPLv2+)
 Source0:	https://github.com/linuxmint/cjs/archive/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	846940e9cf97b15a5b3940cf5c7b2591
+# Source0-md5:	af9e59943aba0974359e76202abd89b8
 URL:		http://cinnamon.linuxmint.com/
 BuildRequires:	autoconf >= 2.53
 BuildRequires:	automake >= 1.7.2
@@ -23,7 +23,7 @@ BuildRequires:	gobject-introspection-devel >= 1.38.0
 BuildRequires:	gtk+3-devel
 BuildRequires:	intltool
 BuildRequires:	libtool
-BuildRequires:	mozjs24-devel
+BuildRequires:	mozjs52-devel
 BuildRequires:	pkgconfig >= 0.14.0
 BuildRequires:	readline-devel
 BuildRequires:	sed >= 4.0
@@ -100,12 +100,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/cjs-1.0
 %{_libdir}/libcjs.so
 %{_pkgconfigdir}/cjs-1.0.pc
-%{_pkgconfigdir}/cjs-internals-1.0.pc
 %attr(755,root,root) %{_libdir}/cjs/libgimarshallingtests.so
 %attr(755,root,root) %{_libdir}/cjs/libregress.so
 %attr(755,root,root) %{_libdir}/cjs/libwarnlib.so
 
 %files tests
 %defattr(644,root,root,755)
-%{_libdir}/cjs/installed-tests
+%dir %{_libexecdir}/cjs
+%{_libexecdir}/cjs/installed-tests
 %{_datadir}/installed-tests
