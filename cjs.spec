@@ -1,32 +1,39 @@
 #
 # Conditional build:
-%bcond_without	tests		# build without tests
+%bcond_without	systemtap	# systemtap/dtrace trace support
+%bcond_with	tests		# JS tests (upstream failed to update them, e.g. tests for version < 4.0.0; some require $DISPLAY)
 
 Summary:	Javascript Bindings for Cinnamon
+Summary(pl.UTF-8):	Wiązania JavaScriptu dla środowiska Cinnamon
 Name:		cjs
-Version:	4.2.0
+Version:	4.4.0
 Release:	1
 Group:		Libraries
 # The following files contain code from Mozilla which
 # is triple licensed under MPL1.1/LGPLv2+/GPLv2+:
 # The console module (modules/console.c)
 # Stack printer (gjs/stack.c)
-License:	MIT and (MPLv1.1 or GPLv2+ or LGPLv2+)
+License:	MIT and (MPL v1.1 or GPL v2+ or LGPL v2+)
+#Source0Download: https://github.com/linuxmint/cjs/releases
 Source0:	https://github.com/linuxmint/cjs/archive/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	af9e59943aba0974359e76202abd89b8
-URL:		http://cinnamon.linuxmint.com/
-BuildRequires:	autoconf >= 2.53
-BuildRequires:	automake >= 1.7.2
+# Source0-md5:	d01c0355343b0278082b24cceed682e3
+URL:		https://github.com/linuxmint/Cinnamon
+BuildRequires:	autoconf >= 2.64
+BuildRequires:	automake >= 1:1.11.1
 BuildRequires:	cairo-gobject-devel
-BuildRequires:	gnome-common
-BuildRequires:	gobject-introspection-devel >= 1.38.0
-BuildRequires:	gtk+3-devel
-BuildRequires:	intltool
-BuildRequires:	libtool
-BuildRequires:	mozjs52-devel
-BuildRequires:	pkgconfig >= 0.14.0
+BuildRequires:	glib2-devel >= 1:2.42.0
+BuildRequires:	gobject-introspection-devel >= 1.46.0
+BuildRequires:	gtk+3-devel >= 3.14.0
+BuildRequires:	libffi-devel >= 3.0
+BuildRequires:	libtool >= 2:2.2.0
+BuildRequires:	libstdc++-devel >= 6:4.7
+BuildRequires:	mozjs52-devel >= 52
+BuildRequires:	pkgconfig >= 1:0.14.0
 BuildRequires:	readline-devel
-BuildRequires:	sed >= 4.0
+%{?with_systemtap:BuildRequires:	systemtap-sdt-devel}
+Requires:	glib2 >= 1:2.42.0
+Requires:	gobject-introspection >= 1.46.0
+Requires:	gtk+3 >= 3.14.0
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -35,15 +42,26 @@ Spidermonkey Javascript engine from Mozilla and the GObject
 introspection framework.
 
 %package devel
-Summary:	Development package for %{name}
+Summary:	Development package for cjs
+Summary(pl.UTF-8):	Pakiet programistyczny cjs
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
+Requires:	cairo-gobject-devel
+Requires:	glib2-devel >= 1:2.42.0
+Requires:	gobject-introspection-devel >= 1.46.0
+Requires:	gtk+3-devel >= 3.14.0
+Requires:	libffi-devel >= 3.0
+Requires:	mozjs52-devel >= 52
 
 %description devel
-Files for development with %{name}.
+Files for development with cjs.
+
+%description devel -l pl.UTF-8
+Pliki do tworzenia oprogramowania z użyciem cjs
 
 %package tests
 Summary:	Tests for the cjs package
+Summary(pl.UTF-8):	Testy dla pakietu cjs
 Group:		Development/Libraries
 Requires:	%{name}-devel = %{version}-%{release}
 
@@ -51,17 +69,36 @@ Requires:	%{name}-devel = %{version}-%{release}
 The cjs-tests package contains tests that can be used to verify the
 functionality of the installed cjs package.
 
+%description tests -l pl.UTF-8
+Ten pakiet zawiera testy, których można użyć do sprawdzenia
+funkcjonalności zainstalowanego pakietu cjs.
+
+%package -n systemtap-cjs
+Summary:	systemtap/dtrace probes for cjs
+Summary(pl.UTF-8):	Sondy systemtap/dtrace dla cjs
+Group:		Development/Tools
+Requires:	%{name} = %{version}-%{release}
+Requires:	systemtap-client
+
+%description -n systemtap-cjs
+systemtap/dtrace probes for cjs.
+
+%description -n systemtap-cjs -l pl.UTF-8
+Sondy systemtap/dtrace dla cjs.
+
 %prep
 %setup -q
-sed -i -e 's@{ACLOCAL_FLAGS}@{ACLOCAL_FLAGS} -I m4@g' Makefile.am
-echo "AC_CONFIG_MACRO_DIR([m4])" >> configure.ac
 
 %build
-NOCONFIGURE=1 ./autogen.sh
+%{__libtoolize}
+%{__aclocal} -I m4
+%{__autoconf}
+%{__autoheader}
+%{__automake}
 %configure \
-	--disable-silent-rules \
-	--disable-static \
 	--enable-installed-tests \
+	--disable-silent-rules \
+	%{?with_systemtap:--enable-systemtap}
 
 %{__make}
 
@@ -71,8 +108,12 @@ NOCONFIGURE=1 ./autogen.sh
 
 %install
 rm -rf $RPM_BUILD_ROOT
+
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
+
+install -d $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
+cp -p examples/* $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
 
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/libcjs.la
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/cjs/lib*.la
@@ -85,7 +126,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc COPYING COPYING.LGPL NEWS README
+%doc COPYING NEWS README.md
 %attr(755,root,root) %{_bindir}/cjs
 %attr(755,root,root) %{_bindir}/cjs-console
 %attr(755,root,root) %{_libdir}/libcjs.so.*.*.*
@@ -96,16 +137,24 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(644,root,root,755)
-%doc examples/*
+%attr(755,root,root) %{_libdir}/libcjs.so
 %{_includedir}/cjs-1.0
-%{_libdir}/libcjs.so
 %{_pkgconfigdir}/cjs-1.0.pc
-%attr(755,root,root) %{_libdir}/cjs/libgimarshallingtests.so
-%attr(755,root,root) %{_libdir}/cjs/libregress.so
-%attr(755,root,root) %{_libdir}/cjs/libwarnlib.so
+%{_examplesdir}/%{name}-%{version}
 
 %files tests
 %defattr(644,root,root,755)
+%attr(755,root,root) %{_libdir}/cjs/libgimarshallingtests.so
+%attr(755,root,root) %{_libdir}/cjs/libregress.so
+%attr(755,root,root) %{_libdir}/cjs/libwarnlib.so
 %dir %{_libexecdir}/cjs
 %{_libexecdir}/cjs/installed-tests
-%{_datadir}/installed-tests
+# FIXME: this is common dir for installed-tests, move to common package (or don't package installed-tests at all)
+%dir %{_datadir}/installed-tests
+%{_datadir}/installed-tests/cjs
+
+%if %{with systemtap}
+%files -n systemtap-cjs
+%defattr(644,root,root,755)
+%{_datadir}/systemtap/tapset/cjs.stp
+%endif
