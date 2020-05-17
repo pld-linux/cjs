@@ -126,7 +126,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc COPYING NEWS README.md
+%doc COPYING NEWS README.md debian/changelog
 %attr(755,root,root) %{_bindir}/cjs
 %attr(755,root,root) %{_bindir}/cjs-console
 %attr(755,root,root) %{_libdir}/libcjs.so.*.*.*
