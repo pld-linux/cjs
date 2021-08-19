@@ -6,7 +6,7 @@
 Summary:	Javascript Bindings for Cinnamon
 Summary(pl.UTF-8):	Wiązania JavaScriptu dla środowiska Cinnamon
 Name:		cjs
-Version:	4.6.0
+Version:	4.8.2
 Release:	1
 Group:		Libraries
 # The following files contain code from Mozilla which
@@ -16,30 +16,36 @@ Group:		Libraries
 License:	MIT and (MPL v1.1 or GPL v2+ or LGPL v2+)
 #Source0Download: https://github.com/linuxmint/cjs/releases
 Source0:	https://github.com/linuxmint/cjs/archive/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	dd6c63134494c328886ffe34abadbf98
+# Source0-md5:	b9444c6e537ebb3838518a16054804ff
 URL:		https://github.com/linuxmint/Cinnamon
-BuildRequires:	autoconf >= 2.64
-BuildRequires:	automake >= 1:1.11.1
 BuildRequires:	cairo-gobject-devel
-BuildRequires:	glib2-devel >= 1:2.42.0
-BuildRequires:	gobject-introspection-devel >= 1.46.0
-BuildRequires:	gtk+3-devel >= 3.14.0
+BuildRequires:	glib2-devel >= 1:2.58.0
+BuildRequires:	gobject-introspection-devel >= 1.58.3
+BuildRequires:	gtk4-devel >= 4.0
 BuildRequires:	libffi-devel >= 3.0
-BuildRequires:	libtool >= 2:2.2.0
-BuildRequires:	libstdc++-devel >= 6:4.7
-BuildRequires:	mozjs52-devel >= 52
+BuildRequires:	libstdc++-devel >= 6:7
+BuildRequires:	meson >= 0.49.2
+BuildRequires:	mozjs78-devel >= 78
+BuildRequires:	ninja >= 1.5
 BuildRequires:	pkgconfig >= 1:0.14.0
 BuildRequires:	readline-devel
+BuildRequires:	rpmbuild(macros) >= 1.736
+BuildRequires:	sed >= 4.0
+%{?with_sysprof:BuildRequires:	sysprof-devel >= 3.38}
 %{?with_systemtap:BuildRequires:	systemtap-sdt-devel}
-Requires:	glib2 >= 1:2.42.0
-Requires:	gobject-introspection >= 1.46.0
-Requires:	gtk+3 >= 3.14.0
+Requires:	glib2 >= 1:2.58.0
+Requires:	gobject-introspection >= 1.58.3
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
-Cjs allows using Cinnamon libraries from Javascript. It's based on the
-Spidermonkey Javascript engine from Mozilla and the GObject
+Cjs allows using Cinnamon libraries from JavaScript. It's based on the
+SpiderMonkey JavaScript engine from Mozilla and the GObject
 introspection framework.
+
+%description -l pl.UTF-8
+Cjs pozwala na używanie bibliotek Cinnamona z poziomu JavaScriptu.
+Jest oparty na silniku JavaScriptu SpiderMonkey z projektu Mozilla
+oraz szkielecie GObject Introspection.
 
 %package devel
 Summary:	Development package for cjs
@@ -47,11 +53,10 @@ Summary(pl.UTF-8):	Pakiet programistyczny cjs
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Requires:	cairo-gobject-devel
-Requires:	glib2-devel >= 1:2.42.0
-Requires:	gobject-introspection-devel >= 1.46.0
-Requires:	gtk+3-devel >= 3.14.0
+Requires:	glib2-devel >= 1:2.58.0
+Requires:	gobject-introspection-devel >= 1.58.3
 Requires:	libffi-devel >= 3.0
-Requires:	mozjs52-devel >= 52
+Requires:	mozjs78-devel >= 78
 
 %description devel
 Files for development with cjs.
@@ -63,6 +68,7 @@ Pliki do tworzenia oprogramowania z użyciem cjs
 Summary:	Tests for the cjs package
 Summary(pl.UTF-8):	Testy dla pakietu cjs
 Group:		Development/Libraries
+Requires(post,postun):	glib2-devel >= 1:2.58.0
 Requires:	%{name}-devel = %{version}-%{release}
 
 %description tests
@@ -89,40 +95,39 @@ Sondy systemtap/dtrace dla cjs.
 %prep
 %setup -q
 
-%build
-%{__libtoolize}
-%{__aclocal} -I m4
-%{__autoconf}
-%{__autoheader}
-%{__automake}
-%configure \
-	--enable-installed-tests \
-	--disable-silent-rules \
-	%{?with_systemtap:--enable-systemtap}
+%{__sed} -i -e 's/ library(/ shared_library(/' installed-tests/js/meson.build
 
-%{__make}
+%build
+%meson build \
+	%{?with_systemtap:-Ddtrace=true} \
+	%{!?with_sysprof:-Dprofiler=disabled} \
+	%{?with_systemtap:-Dsystemtap=true}
+
+%ninja_build -C build
 
 %if %{with tests}
-%{__make} check
+%ninja_test -C build
 %endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%{__make} install \
-	DESTDIR=$RPM_BUILD_ROOT
+%ninja_install -C build
 
 install -d $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
 cp -p examples/* $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
-
-%{__rm} $RPM_BUILD_ROOT%{_libdir}/libcjs.la
-%{__rm} $RPM_BUILD_ROOT%{_libdir}/cjs/lib*.la
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post	-p /sbin/ldconfig
 %postun	-p /sbin/ldconfig
+
+%post tests
+%glib_compile_schemas
+
+%postun tests
+%glib_compile_schemas
 
 %files
 %defattr(644,root,root,755)
@@ -134,6 +139,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libdir}/cjs
 %dir %{_libdir}/cjs/girepository-1.0
 %{_libdir}/cjs/girepository-1.0/CjsPrivate-1.0.typelib
+%{_datadir}/cjs-1.0
 
 %files devel
 %defattr(644,root,root,755)
@@ -144,12 +150,18 @@ rm -rf $RPM_BUILD_ROOT
 
 %files tests
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/cjs/libgimarshallingtests.so
-%attr(755,root,root) %{_libdir}/cjs/libregress.so
-%attr(755,root,root) %{_libdir}/cjs/libwarnlib.so
-%dir %{_libexecdir}/cjs
-%{_libexecdir}/cjs/installed-tests
-# FIXME: this is common dir for installed-tests, move to common package (or don't package installed-tests at all)
+# TODO: move system-side installed-tests dirs somewhere (filesystem?)
+%dir %{_libexecdir}/installed-tests
+%dir %{_libexecdir}/installed-tests/cjs
+%attr(755,root,root) %{_libexecdir}/installed-tests/cjs/debugger-test.sh
+%attr(755,root,root) %{_libexecdir}/installed-tests/cjs/minijasmine
+%attr(755,root,root) %{_libexecdir}/installed-tests/cjs/lib*.so
+%{_libexecdir}/installed-tests/cjs/*.typelib
+%{_libexecdir}/installed-tests/cjs/debugger
+%{_libexecdir}/installed-tests/cjs/js
+%dir %{_libexecdir}/installed-tests/cjs/scripts
+%attr(755,root,root) %{_libexecdir}/installed-tests/cjs/scripts/test*.sh
+%{_datadir}/glib-2.0/schemas/org.cinnamon.CjsTest.gschema.xml
 %dir %{_datadir}/installed-tests
 %{_datadir}/installed-tests/cjs
 
