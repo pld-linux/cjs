@@ -1,5 +1,6 @@
 #
 # Conditional build:
+%bcond_without	sysprof		# sysprof profiling support
 %bcond_without	systemtap	# systemtap/dtrace trace support
 %bcond_with	tests		# JS tests (upstream failed to update them, e.g. tests for version < 4.0.0; some require $DISPLAY)
 
