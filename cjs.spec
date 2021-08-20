@@ -7,8 +7,8 @@
 Summary:	Javascript Bindings for Cinnamon
 Summary(pl.UTF-8):	Wiązania JavaScriptu dla środowiska Cinnamon
 Name:		cjs
-Version:	4.8.2
-Release:	2
+Version:	5.0.0
+Release:	1
 Group:		Libraries
 # The following files contain code from Mozilla which
 # is triple licensed under MPL1.1/LGPLv2+/GPLv2+:
@@ -17,7 +17,7 @@ Group:		Libraries
 License:	MIT and (MPL v1.1 or GPL v2+ or LGPL v2+)
 #Source0Download: https://github.com/linuxmint/cjs/releases
 Source0:	https://github.com/linuxmint/cjs/archive/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	b9444c6e537ebb3838518a16054804ff
+# Source0-md5:	df2ac23311ef24b788386a0e021ef133
 URL:		https://github.com/linuxmint/Cinnamon
 BuildRequires:	cairo-gobject-devel
 BuildRequires:	glib2-devel >= 1:2.58.0
