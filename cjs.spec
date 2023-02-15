@@ -8,7 +8,7 @@ Summary:	Javascript Bindings for Cinnamon
 Summary(pl.UTF-8):	Wiązania JavaScriptu dla środowiska Cinnamon
 Name:		cjs
 Version:	4.8.2
-Release:	1
+Release:	2
 Group:		Libraries
 # The following files contain code from Mozilla which
 # is triple licensed under MPL1.1/LGPLv2+/GPLv2+:
