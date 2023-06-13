@@ -2,12 +2,13 @@
 # Conditional build:
 %bcond_without	sysprof		# sysprof profiling support
 %bcond_without	systemtap	# systemtap/dtrace trace support
+%bcond_with	installed_tests	# tests package
 %bcond_with	tests		# JS tests (upstream failed to update them, e.g. tests for version < 4.0.0; some require $DISPLAY)
 
 Summary:	Javascript Bindings for Cinnamon
 Summary(pl.UTF-8):	Wiązania JavaScriptu dla środowiska Cinnamon
 Name:		cjs
-Version:	5.0.0
+Version:	5.8.0
 Release:	1
 Group:		Libraries
 # The following files contain code from Mozilla which
@@ -15,18 +16,18 @@ Group:		Libraries
 # The console module (modules/console.c)
 # Stack printer (gjs/stack.c)
 License:	MIT and (MPL v1.1 or GPL v2+ or LGPL v2+)
-#Source0Download: https://github.com/linuxmint/cjs/releases
+#Source0Download: https://github.com/linuxmint/cjs/tags
 Source0:	https://github.com/linuxmint/cjs/archive/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	df2ac23311ef24b788386a0e021ef133
+# Source0-md5:	991e1bbf2ebf7cca4e93cfce66c4a876
 URL:		https://github.com/linuxmint/Cinnamon
 BuildRequires:	cairo-gobject-devel
-BuildRequires:	glib2-devel >= 1:2.58.0
-BuildRequires:	gobject-introspection-devel >= 1.58.3
+BuildRequires:	glib2-devel >= 1:2.66.0
+BuildRequires:	gobject-introspection-devel >= 1.66.0
 BuildRequires:	gtk4-devel >= 4.0
 BuildRequires:	libffi-devel >= 3.0
 BuildRequires:	libstdc++-devel >= 6:7
-BuildRequires:	meson >= 0.49.2
-BuildRequires:	mozjs78-devel >= 78
+BuildRequires:	meson >= 0.54.0
+BuildRequires:	mozjs102-devel >= 102
 BuildRequires:	ninja >= 1.5
 BuildRequires:	pkgconfig >= 1:0.14.0
 BuildRequires:	readline-devel
@@ -34,8 +35,8 @@ BuildRequires:	rpmbuild(macros) >= 1.736
 BuildRequires:	sed >= 4.0
 %{?with_sysprof:BuildRequires:	sysprof-devel >= 3.38}
 %{?with_systemtap:BuildRequires:	systemtap-sdt-devel}
-Requires:	glib2 >= 1:2.58.0
-Requires:	gobject-introspection >= 1.58.3
+Requires:	glib2 >= 1:2.66.0
+Requires:	gobject-introspection >= 1.66.0
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -54,10 +55,13 @@ Summary(pl.UTF-8):	Pakiet programistyczny cjs
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Requires:	cairo-gobject-devel
-Requires:	glib2-devel >= 1:2.58.0
-Requires:	gobject-introspection-devel >= 1.58.3
+Requires:	glib2-devel >= 1:2.66.0
+Requires:	gobject-introspection-devel >= 1.66.0
 Requires:	libffi-devel >= 3.0
-Requires:	mozjs78-devel >= 78
+Requires:	mozjs102-devel >= 102
+%if %{without installed_tests}
+Obsoletes:	cjs-tests < %{version}-%{release}
+%endif
 
 %description devel
 Files for development with cjs.
@@ -69,7 +73,7 @@ Pliki do tworzenia oprogramowania z użyciem cjs
 Summary:	Tests for the cjs package
 Summary(pl.UTF-8):	Testy dla pakietu cjs
 Group:		Development/Libraries
-Requires(post,postun):	glib2-devel >= 1:2.58.0
+Requires(post,postun):	glib2-devel >= 1:2.66.0
 Requires:	%{name}-devel = %{version}-%{release}
 
 %description tests
@@ -101,6 +105,7 @@ Sondy systemtap/dtrace dla cjs.
 %build
 %meson build \
 	%{?with_systemtap:-Ddtrace=true} \
+	%{?with_installed_tests:-Dinstalled_tests=true} \
 	%{!?with_sysprof:-Dprofiler=disabled} \
 	%{?with_systemtap:-Dsystemtap=true}
 
@@ -114,6 +119,11 @@ Sondy systemtap/dtrace dla cjs.
 rm -rf $RPM_BUILD_ROOT
 
 %ninja_install -C build
+
+%if %{with systemtap}
+# they forgot to rename again on GNOME merge
+%{__mv} $RPM_BUILD_ROOT%{_datadir}/systemtap/tapset/{gjs,cjs}.stp
+%endif
 
 install -d $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
 cp -p examples/* $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
@@ -149,6 +159,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_pkgconfigdir}/cjs-1.0.pc
 %{_examplesdir}/%{name}-%{version}
 
+%if %{with installed_tests}
 %files tests
 %defattr(644,root,root,755)
 # TODO: move system-side installed-tests dirs somewhere (filesystem?)
@@ -165,6 +176,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/glib-2.0/schemas/org.cinnamon.CjsTest.gschema.xml
 %dir %{_datadir}/installed-tests
 %{_datadir}/installed-tests/cjs
+%endif
 
 %if %{with systemtap}
 %files -n systemtap-cjs
