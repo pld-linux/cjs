@@ -8,7 +8,7 @@
 Summary:	Javascript Bindings for Cinnamon
 Summary(pl.UTF-8):	Wiązania JavaScriptu dla środowiska Cinnamon
 Name:		cjs
-Version:	6.0.0
+Version:	6.2.0
 Release:	1
 Group:		Libraries
 # The following files contain code from Mozilla which
@@ -18,16 +18,16 @@ Group:		Libraries
 License:	MIT and (MPL v1.1 or GPL v2+ or LGPL v2+)
 #Source0Download: https://github.com/linuxmint/cjs/tags
 Source0:	https://github.com/linuxmint/cjs/archive/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	3e4c66fe5643c16b0041959084929ca1
+# Source0-md5:	15dedeb0db46f7ee9e0897c7d80acff7
 URL:		https://github.com/linuxmint/Cinnamon
 BuildRequires:	cairo-gobject-devel
 BuildRequires:	glib2-devel >= 1:2.66.0
-BuildRequires:	gobject-introspection-devel >= 1.66.0
+BuildRequires:	gobject-introspection-devel >= 1.71.0
 BuildRequires:	gtk4-devel >= 4.0
 BuildRequires:	libffi-devel >= 3.0
 BuildRequires:	libstdc++-devel >= 6:7
 BuildRequires:	meson >= 0.56.0
-BuildRequires:	mozjs102-devel >= 102
+BuildRequires:	mozjs115-devel >= 115
 BuildRequires:	ninja >= 1.5
 BuildRequires:	pkgconfig >= 1:0.14.0
 BuildRequires:	readline-devel
@@ -36,7 +36,7 @@ BuildRequires:	sed >= 4.0
 %{?with_sysprof:BuildRequires:	sysprof-devel >= 3.38}
 %{?with_systemtap:BuildRequires:	systemtap-sdt-devel}
 Requires:	glib2 >= 1:2.66.0
-Requires:	gobject-introspection >= 1.66.0
+Requires:	gobject-introspection >= 1.71.0
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -56,9 +56,9 @@ Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 Requires:	cairo-gobject-devel
 Requires:	glib2-devel >= 1:2.66.0
-Requires:	gobject-introspection-devel >= 1.66.0
+Requires:	gobject-introspection-devel >= 1.71.0
 Requires:	libffi-devel >= 3.0
-Requires:	mozjs102-devel >= 102
+Requires:	mozjs115-devel >= 115
 %if %{without installed_tests}
 Obsoletes:	cjs-tests < %{version}-%{release}
 %endif
