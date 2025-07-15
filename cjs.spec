@@ -103,13 +103,13 @@ Sondy systemtap/dtrace dla cjs.
 %{__sed} -i -e 's/ library(/ shared_library(/' installed-tests/js/meson.build
 
 %build
-%meson build \
+%meson \
 	%{?with_systemtap:-Ddtrace=true} \
 	%{?with_installed_tests:-Dinstalled_tests=true} \
 	%{!?with_sysprof:-Dprofiler=disabled} \
 	%{?with_systemtap:-Dsystemtap=true}
 
-%ninja_build -C build
+%meson_build
 
 %if %{with tests}
 %ninja_test -C build
@@ -118,7 +118,7 @@ Sondy systemtap/dtrace dla cjs.
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%ninja_install -C build
+%meson_install
 
 %if %{with systemtap}
 # they forgot to rename again on GNOME merge
