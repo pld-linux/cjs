@@ -31,7 +31,7 @@ BuildRequires:	mozjs115-devel >= 115
 BuildRequires:	ninja >= 1.5
 BuildRequires:	pkgconfig >= 1:0.14.0
 BuildRequires:	readline-devel
-BuildRequires:	rpmbuild(macros) >= 1.736
+BuildRequires:	rpmbuild(macros) >= 2.042
 BuildRequires:	sed >= 4.0
 %{?with_sysprof:BuildRequires:	sysprof-devel >= 3.38}
 %{?with_systemtap:BuildRequires:	systemtap-sdt-devel}
