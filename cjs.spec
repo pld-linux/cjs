@@ -3,12 +3,12 @@
 %bcond_without	sysprof		# sysprof profiling support
 %bcond_without	systemtap	# systemtap/dtrace trace support
 %bcond_with	installed_tests	# tests package
-%bcond_with	tests		# JS tests (upstream failed to update them, e.g. tests for version < 4.0.0; some require $DISPLAY)
+%bcond_with	tests		# JS tests (one API tests fail)
 
 Summary:	Javascript Bindings for Cinnamon
 Summary(pl.UTF-8):	Wiązania JavaScriptu dla środowiska Cinnamon
 Name:		cjs
-Version:	6.4.0
+Version:	128.1
 Release:	1
 Group:		Libraries
 # The following files contain code from Mozilla which
@@ -18,7 +18,7 @@ Group:		Libraries
 License:	MIT and (MPL v1.1 or GPL v2+ or LGPL v2+)
 #Source0Download: https://github.com/linuxmint/cjs/tags
 Source0:	https://github.com/linuxmint/cjs/archive/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	828215c712b181967f47acea8b42147f
+# Source0-md5:	3b8a136df8dbad6196598f098db72dea
 URL:		https://github.com/linuxmint/Cinnamon
 BuildRequires:	cairo-gobject-devel
 BuildRequires:	glib2-devel >= 1:2.66.0
@@ -26,8 +26,8 @@ BuildRequires:	gobject-introspection-devel >= 1.71.0
 BuildRequires:	gtk4-devel >= 4.0
 BuildRequires:	libffi-devel >= 3.0
 BuildRequires:	libstdc++-devel >= 6:7
-BuildRequires:	meson >= 0.56.0
-BuildRequires:	mozjs115-devel >= 115
+BuildRequires:	meson >= 0.62.0
+BuildRequires:	mozjs128-devel >= 128
 BuildRequires:	ninja >= 1.5
 BuildRequires:	pkgconfig >= 1:0.14.0
 BuildRequires:	readline-devel
@@ -38,6 +38,10 @@ BuildRequires:	sed >= 4.0
 Requires:	glib2 >= 1:2.66.0
 Requires:	gobject-introspection >= 1.71.0
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
+
+# dtrace script expects CPP to be cpp, not "gcc -E", so force it regardless of rpm version
+# (autotools-based rpm<4.19 used to have "gcc -E", cmake builds for 4.19+ switched to cpp)
+%define		__cpp	cpp
 
 %description
 Cjs allows using Cinnamon libraries from JavaScript. It's based on the
@@ -58,7 +62,7 @@ Requires:	cairo-gobject-devel
 Requires:	glib2-devel >= 1:2.66.0
 Requires:	gobject-introspection-devel >= 1.71.0
 Requires:	libffi-devel >= 3.0
-Requires:	mozjs115-devel >= 115
+Requires:	mozjs128-devel >= 128
 %if %{without installed_tests}
 Obsoletes:	cjs-tests < %{version}-%{release}
 %endif
@@ -105,8 +109,11 @@ Sondy systemtap/dtrace dla cjs.
 %build
 %meson \
 	%{?with_systemtap:-Ddtrace=true} \
-	%{?with_installed_tests:-Dinstalled_tests=true} \
-	%{!?with_sysprof:-Dprofiler=disabled} \
+	%{!?with_installed_tests:-Dinstalled_tests=false} \
+	-Dprofiler=%{__enabled_disabled sysprof} \
+	-Dreadline=enabled \
+	-Dskip_dbus_tests=true \
+	-Dskip_gtk_tests=true \
 	%{?with_systemtap:-Dsystemtap=true}
 
 %meson_build
@@ -119,11 +126,6 @@ Sondy systemtap/dtrace dla cjs.
 rm -rf $RPM_BUILD_ROOT
 
 %meson_install
-
-%if %{with systemtap}
-# they forgot to rename again on GNOME merge
-%{__mv} $RPM_BUILD_ROOT%{_datadir}/systemtap/tapset/{gjs,cjs}.stp
-%endif
 
 install -d $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
 cp -p examples/* $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
@@ -145,7 +147,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING NEWS README.md debian/changelog
 %attr(755,root,root) %{_bindir}/cjs
 %attr(755,root,root) %{_bindir}/cjs-console
-%attr(755,root,root) %{_libdir}/libcjs.so.*.*.*
+%{_libdir}/libcjs.so.*.*.*
 %ghost %{_libdir}/libcjs.so.0
 %dir %{_libdir}/cjs
 %dir %{_libdir}/cjs/girepository-1.0
@@ -154,7 +156,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libcjs.so
+%{_libdir}/libcjs.so
 %{_includedir}/cjs-1.0
 %{_pkgconfigdir}/cjs-1.0.pc
 %{_examplesdir}/%{name}-%{version}
@@ -167,7 +169,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libexecdir}/installed-tests/cjs
 %attr(755,root,root) %{_libexecdir}/installed-tests/cjs/debugger-test.sh
 %attr(755,root,root) %{_libexecdir}/installed-tests/cjs/minijasmine
-%attr(755,root,root) %{_libexecdir}/installed-tests/cjs/lib*.so
+%{_libexecdir}/installed-tests/cjs/lib*.so
 %{_libexecdir}/installed-tests/cjs/*.typelib
 %{_libexecdir}/installed-tests/cjs/debugger
 %{_libexecdir}/installed-tests/cjs/js
