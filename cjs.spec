@@ -8,7 +8,7 @@
 Summary:	Javascript Bindings for Cinnamon
 Summary(pl.UTF-8):	Wiązania JavaScriptu dla środowiska Cinnamon
 Name:		cjs
-Version:	128.1
+Version:	140.0
 Release:	1
 Group:		Libraries
 # The following files contain code from Mozilla which
@@ -18,7 +18,7 @@ Group:		Libraries
 License:	MIT and (MPL v1.1 or GPL v2+ or LGPL v2+)
 #Source0Download: https://github.com/linuxmint/cjs/tags
 Source0:	https://github.com/linuxmint/cjs/archive/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	3b8a136df8dbad6196598f098db72dea
+# Source0-md5:	1484d57d930b9c1ece3dd9284d421ea4
 URL:		https://github.com/linuxmint/Cinnamon
 BuildRequires:	cairo-gobject-devel
 BuildRequires:	glib2-devel >= 1:2.66.0
@@ -27,7 +27,7 @@ BuildRequires:	gtk4-devel >= 4.0
 BuildRequires:	libffi-devel >= 3.0
 BuildRequires:	libstdc++-devel >= 6:7
 BuildRequires:	meson >= 0.62.0
-BuildRequires:	mozjs128-devel >= 128
+BuildRequires:	mozjs140-devel >= 140
 BuildRequires:	ninja >= 1.5
 BuildRequires:	pkgconfig >= 1:0.14.0
 BuildRequires:	readline-devel
@@ -62,7 +62,7 @@ Requires:	cairo-gobject-devel
 Requires:	glib2-devel >= 1:2.66.0
 Requires:	gobject-introspection-devel >= 1.71.0
 Requires:	libffi-devel >= 3.0
-Requires:	mozjs128-devel >= 128
+Requires:	mozjs140-devel >= 140
 %if %{without installed_tests}
 Obsoletes:	cjs-tests < %{version}-%{release}
 %endif
@@ -106,7 +106,17 @@ Sondy systemtap/dtrace dla cjs.
 
 %{__sed} -i -e 's/ library(/ shared_library(/' installed-tests/js/meson.build
 
+# missing change after gjs 1.88 rebase
+%{__sed} -i -e 's/GjsPrivate/CjsPrivate/' \
+	meson.build \
+	installed-tests/js/testGLib.js \
+	modules/core/_gettext.js \
+	modules/core/overrides/*.js \
+	modules/esm/console.js
+
 %build
+# <mozilla/UniquePtrExtensions.h> included from some mozjs headers expects platform configuration flags
+CXXFLAGS="%{rpmcxxflags} -DXP_UNIX=1"
 %meson \
 	%{?with_systemtap:-Ddtrace=true} \
 	%{!?with_installed_tests:-Dinstalled_tests=false} \
@@ -127,6 +137,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %meson_install
 
+%if %{without installed_tests}
+# still present with -Dinstalled_tests=false
+%{__rm} -r $RPM_BUILD_ROOT%{_libexecdir}/installed-tests
+%endif
+
 install -d $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
 cp -p examples/* $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
 
@@ -145,8 +160,9 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc COPYING NEWS README.md debian/changelog
-%attr(755,root,root) %{_bindir}/cjs
 %attr(755,root,root) %{_bindir}/cjs-console
+# symlink
+%{_bindir}/cjs
 %{_libdir}/libcjs.so.*.*.*
 %ghost %{_libdir}/libcjs.so.0
 %dir %{_libdir}/cjs
